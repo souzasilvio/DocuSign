@@ -3,3 +3,8 @@
 ################################################################################
 
 /.vs/POC.ContratoDigital/v16/Server/sqlite3
+/AppEnvio/bin/Debug/netcoreapp2.2
+/AppEnvio/obj
+/AppWebHook/bin
+/AppWebHook/obj
+/.vs/POC.ContratoDigital/v16
