@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml;
+using AppWebHook.Helper;
 using AppWebHook.Service;
 using DocuSign.eSign.Api;
 using DocuSign.eSign.Client;
@@ -36,51 +37,7 @@ namespace AppWebHook.Controllers
         }
 
 
-        /// <summary>
-        /// Teste
-        /// </summary>
-        /// <param name="id"></param>
-        [AllowAnonymous]
-        [HttpGet("listar/{id}")]
-        public void Listar(string id)
-        {
-            EnvelopesApi envelopeApi = new EnvelopesApi(ApiService.ApiClient.Configuration);
-            EnvelopeDocumentsResult results = envelopeApi.ListDocuments(ApiService.AccountID, id);
-            foreach (EnvelopeDocument doc in results.EnvelopeDocuments)
-            {
-                System.IO.Stream documentoPdf = envelopeApi.GetDocument(ApiService.AccountID,
-                            id, doc.DocumentId);
-                UploadFileFromStream(documentoPdf, $"{doc.Name}.pdf");
-            }
-        }
-
-        private void UploadFileFromStream(Stream fileStream, string fileName)
-        {
-            string connection = Config["Storage"];
-            string containerString = "dadosdocusign";
-
-            CloudStorageAccount storage = CloudStorageAccount.Parse(connection);
-            CloudBlobClient client = storage.CreateCloudBlobClient();
-            CloudBlobContainer container = client.GetContainerReference(containerString);
-            CloudBlockBlob blob = container.GetBlockBlobReference(fileName);
-            blob.UploadFromStream(fileStream);
-         
-        }
-
-        private void UploadFile(string fileName)
-        {
-            string connection = Config["Storage"];            
-            string containerString = "dadosdocusign";
-
-            CloudStorageAccount storage = CloudStorageAccount.Parse(connection);
-            CloudBlobClient client = storage.CreateCloudBlobClient();
-            CloudBlobContainer container = client.GetContainerReference(containerString);
-            CloudBlockBlob blob = container.GetBlockBlobReference(fileName);            
-            using (var fileStream = System.IO.File.OpenRead(fileName))
-            {
-                blob.UploadFromStream(fileStream);
-            }
-        }
+     
         /// <summary>
         /// Url de webhook a ser chamada pela docusign
         /// </summary>
@@ -105,7 +62,7 @@ namespace AppWebHook.Controllers
                 string file = $"{_hostingEnvironment.ContentRootPath}/Documents/" +
                     envelopeId.InnerText + "_" + statusEvelop.InnerText + "_" + Guid.NewGuid() + ".xml";
                 System.IO.File.WriteAllText(file, xmldoc.OuterXml);
-                UploadFile(file);
+                StorageHelper.UploadFile(Config, file);
             }
 
             string signer_name = "";
@@ -140,15 +97,7 @@ namespace AppWebHook.Controllers
                 XmlNode docs = xmldoc.SelectSingleNode("//a:DocumentPDFs", mgr);
                 if (docs != null)
                 {
-                    foreach (XmlNode doc in docs.ChildNodes)
-                    {
-                        string documentName = doc.ChildNodes[0].InnerText; // pdf.SelectSingleNode("//a:Name", mgr).InnerText;
-                        string documentId = doc.ChildNodes[2].InnerText; // pdf.SelectSingleNode("//a:DocumentID", mgr).InnerText;
-                        string byteStr = doc.ChildNodes[1].InnerText; // pdf.SelectSingleNode("//a:PDFBytes", mgr).InnerText;
-                        string arquivoAssinado = $"{_hostingEnvironment.ContentRootPath}/Documents/" + envelopeId.InnerText + "_" + documentId + "_" + documentName;
-                        System.IO.File.WriteAllText(arquivoAssinado, byteStr);
-                        UploadFile(arquivoAssinado);
-                    }
+                    GravaDocumentosRecebidos(docs, envelopeId);
                 }
                 else
                 {
@@ -159,15 +108,27 @@ namespace AppWebHook.Controllers
             }
         }
 
+        private void GravaDocumentosRecebidos(XmlNode docs, XmlNode envelopeId)
+        {
+            foreach (XmlNode doc in docs.ChildNodes)
+            {
+                string documentName = doc.ChildNodes[0].InnerText; // pdf.SelectSingleNode("//a:Name", mgr).InnerText;
+                string documentId = doc.ChildNodes[2].InnerText; // pdf.SelectSingleNode("//a:DocumentID", mgr).InnerText;
+                string byteStr = doc.ChildNodes[1].InnerText; // pdf.SelectSingleNode("//a:PDFBytes", mgr).InnerText;
+                string arquivoAssinado = $"{_hostingEnvironment.ContentRootPath}/Documents/" + envelopeId.InnerText + "_" + documentId + "_" + documentName;
+                System.IO.File.WriteAllText(arquivoAssinado, byteStr);
+                StorageHelper.UploadFile(Config, arquivoAssinado);
+            }
+        }
+
         private void ObterDocumentos(string idEnvelope)
         {
             EnvelopesApi envelopeApi = new EnvelopesApi(ApiService.ApiClient.Configuration);
             EnvelopeDocumentsResult results = envelopeApi.ListDocuments(ApiService.AccountID, idEnvelope);
             foreach (EnvelopeDocument doc in results.EnvelopeDocuments)
             {
-                System.IO.Stream documentoPdf = envelopeApi.GetDocument(ApiService.AccountID,
-                            idEnvelope, doc.DocumentId);
-                UploadFileFromStream(documentoPdf, $"`{idEnvelope}{doc.Name}.pdf");
+                System.IO.Stream documentoPdf = envelopeApi.GetDocument(ApiService.AccountID, idEnvelope, doc.DocumentId);
+                StorageHelper.UploadFileFromStream(Config, documentoPdf, $"`{idEnvelope}{doc.Name}.pdf");
             }
         }
     }
