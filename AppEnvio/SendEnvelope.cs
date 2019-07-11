@@ -91,7 +91,7 @@ namespace AppEnvio
             // create a signer recipient to sign the document, identified by name and email
             // We're setting the parameters via the object creation
             Signer signer1 = CreateSigner(DSConfig.Signer1Email, DSConfig.Signer1Name, 1, 1);
-            Signer signer2 = CreateSigner(DSConfig.Signer2Email, DSConfig.Signer3Name, 2, 1);
+            Signer signer2 = CreateSigner(DSConfig.Signer2Email, DSConfig.Signer2Name, 2, 1);
             //Signer signer3 = CreateSigner(DSConfig.Signer3Email, DSConfig.Signer3Name, 3, 2);
             
             // routingOrder (lower means earlier) determines the order of deliveries

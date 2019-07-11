@@ -8,3 +8,5 @@
 /AppWebHook/bin
 /AppWebHook/obj
 /.vs/POC.ContratoDigital/v16
+/.vs/POC.ContratoDigital/v15/Server/sqlite3
+/.vs/POC.ContratoDigital/DesignTimeBuild
