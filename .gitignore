@@ -10,3 +10,6 @@
 /.vs/POC.ContratoDigital/v16
 /.vs/POC.ContratoDigital/v15/Server/sqlite3
 /.vs/POC.ContratoDigital/DesignTimeBuild
+/AppEnvio/App_mrv.config
+/AppEnvio/ContratoDigitalPrivKey.pem
+/AppEnvio/ContratoDigitalPubKey.pem

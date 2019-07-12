@@ -11,11 +11,14 @@ namespace AppEnvio
         {
             try
             {
-                var apiClient = new ApiClient();
 
+                Console.WriteLine("Digite 1 para teste de processo de assinatura.");
+                Console.WriteLine("Digite 2 para teste de Visualização (Similar ao antigo comprova) .");
+                string opcao = Console.ReadLine();
+                var apiClient = new ApiClient();
                 var urlwebhook = System.Configuration.ConfigurationManager.AppSettings["WebHookUrl"];
                 Console.WriteLine("\nSending an envelope with one document. This takes about 15 seconds...");
-                EnvelopeSummary result = new SendEnvelope(apiClient).Send(urlwebhook);
+                EnvelopeSummary result = new SendEnvelope(apiClient).Send(urlwebhook, opcao);
                 Console.WriteLine("\nDone. Envelope status: {0}. Envelope ID: {1}", result.Status, result.EnvelopeId);
 
                 //Console.WriteLine("\n\nList the envelopes in the account...");

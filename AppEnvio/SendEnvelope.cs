@@ -57,11 +57,11 @@ namespace AppEnvio
         ///
         /// </summary>
         /// <returns></returns>
-        internal EnvelopeSummary Send(string webhookurl)
+        internal EnvelopeSummary Send(string webhookurl, string opcao)
         {
             CheckToken();
 
-            EnvelopeDefinition envelope = this.CreateEvelope();
+            EnvelopeDefinition envelope = this.CreateEvelope(opcao);
             //Adiciona a configuração do webhook no envelope
             if(!string.IsNullOrEmpty(webhookurl))
             {
@@ -75,7 +75,7 @@ namespace AppEnvio
         /// This method creates the envelope request body 
         /// </summary>
         /// <returns></returns>
-        private EnvelopeDefinition CreateEvelope()
+        private EnvelopeDefinition CreateEvelope(string opcao)
         {
             EnvelopeDefinition envelopeDefinition = new EnvelopeDefinition
             {
@@ -88,42 +88,58 @@ namespace AppEnvio
 
             // The order in the docs array determines the order in the envelope
             envelopeDefinition.Documents = new List<Document>() { doc3 };
-            // create a signer recipient to sign the document, identified by name and email
-            // We're setting the parameters via the object creation
-            Signer signer1 = CreateSigner(DSConfig.Signer1Email, DSConfig.Signer1Name, 1, 1);
-            Signer signer2 = CreateSigner(DSConfig.Signer2Email, DSConfig.Signer2Name, 2, 1);
-            //Signer signer3 = CreateSigner(DSConfig.Signer3Email, DSConfig.Signer3Name, 3, 2);
-            
-            // routingOrder (lower means earlier) determines the order of deliveries
-            // to the recipients. Parallel routing order is supported by using the
-            // same integer as the order for two or more recipients.
+            //Se testando modo de Visualização
+            if (opcao == "2")
+            {
+                Console.WriteLine("Documento será enviado para cliente e ele precisa apenas visualizar...");
+                var destinaratios = CreateDelivery(DSConfig.Signer1Email, DSConfig.Signer1Name, 1, 1);
+                envelopeDefinition.Recipients = new Recipients
+                {
+                    CertifiedDeliveries = new List<CertifiedDelivery>() { destinaratios }
+                };
+                envelopeDefinition.Status = "sent";
+                return envelopeDefinition;
+            }
+            else
+            {
 
-            // create a cc recipient to receive a copy of the documents, identified by name and email
-            // We're setting the parameters via setters
-            //CarbonCopy cc1 = CreateCarbonCopy();
-            // Create signHere fields (also known as tabs) on the documents,
-            // We're using anchor (autoPlace) positioning
-            //
-            // The DocuSign platform seaches throughout your envelope's
-            // documents for matching anchor strings. So the
-            // sign_here_2 tab will be used in both document 2 and 3 since they
-            // use the same anchor string for their "signer 1" tabs.
-            SignHere signHere1 = CreateSignHere("**signature_1**", "pixels", "20", "10");
-            SignHere signHere2 = CreateSignHere("**signature_2**", "pixels", "60", "10");
-            //SignHere signHere3 = CreateSignHere("**signature_3**", "pixels", "100", "10");
-            
-            // Tabs are set per recipient / signer
-            SetSignerTabs(signer1, signHere1);
-            SetSignerTabs(signer2, signHere2);
-            //SetSignerTabs(signer3, signHere3);
-            // Add the recipients to the envelope object
-            Recipients recipients = CreateRecipients(new List<Signer>() { signer1, signer2 });
-            envelopeDefinition.Recipients = recipients;
-            // Request that the envelope be sent by setting |status| to "sent".
-            // To request that the envelope be created as a draft, set to "created"
-            envelopeDefinition.Status = "sent";
+                // create a signer recipient to sign the document, identified by name and email
+                // We're setting the parameters via the object creation
+                Signer signer1 = CreateSigner(DSConfig.Signer1Email, DSConfig.Signer1Name, 1, 1);
+                Signer signer2 = CreateSigner(DSConfig.Signer2Email, DSConfig.Signer2Name, 2, 1);
+                //Signer signer3 = CreateSigner(DSConfig.Signer3Email, DSConfig.Signer3Name, 3, 2);
 
-            return envelopeDefinition;
+                // routingOrder (lower means earlier) determines the order of deliveries
+                // to the recipients. Parallel routing order is supported by using the
+                // same integer as the order for two or more recipients.
+
+                // create a cc recipient to receive a copy of the documents, identified by name and email
+                // We're setting the parameters via setters
+                //CarbonCopy cc1 = CreateCarbonCopy();
+                // Create signHere fields (also known as tabs) on the documents,
+                // We're using anchor (autoPlace) positioning
+                //
+                // The DocuSign platform seaches throughout your envelope's
+                // documents for matching anchor strings. So the
+                // sign_here_2 tab will be used in both document 2 and 3 since they
+                // use the same anchor string for their "signer 1" tabs.
+                SignHere signHere1 = CreateSignHere("**signature_1**", "pixels", "20", "10");
+                SignHere signHere2 = CreateSignHere("**signature_2**", "pixels", "60", "10");
+                //SignHere signHere3 = CreateSignHere("**signature_3**", "pixels", "100", "10");
+
+                // Tabs are set per recipient / signer
+                SetSignerTabs(signer1, signHere1);
+                SetSignerTabs(signer2, signHere2);
+                //SetSignerTabs(signer3, signHere3);
+                // Add the recipients to the envelope object
+                Recipients recipients = CreateRecipients(new List<Signer>() { signer1, signer2 });
+                envelopeDefinition.Recipients = recipients;
+                // Request that the envelope be sent by setting |status| to "sent".
+                // To request that the envelope be created as a draft, set to "created"
+                envelopeDefinition.Status = "sent";
+
+                return envelopeDefinition;
+            }
         }
         /// <summary>
         /// This method creates Recipients instance and populates its signers and carbon copies
@@ -200,6 +216,24 @@ namespace AppEnvio
             };
         }
 
+        /// <summary>
+        /// Cria um destinarario que precisa apenas receber e visualizar o documento
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="nome"></param>
+        /// <param name="recipientId"></param>
+        /// <param name="RoutingOrder"></param>
+        /// <returns></returns>
+        private CertifiedDelivery CreateDelivery(string email, string nome, int recipientId, int RoutingOrder)
+        {
+            return new CertifiedDelivery
+            {
+                Email = email,
+                Name = nome,
+                RecipientId = $"{recipientId}",
+                RoutingOrder = $"{RoutingOrder}"
+            };
+        }
         /// <summary>
         /// This method create document from byte array template
         /// </summary>

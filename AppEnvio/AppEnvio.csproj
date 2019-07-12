@@ -11,9 +11,21 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="ContratoDigitalPrivKey.pem">
+      <LastGenOutput>ContratoDigitalPrivKey.cs</LastGenOutput>
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+    <None Update="ContratoDigitalPubKey.pem">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ContratoDigitalPubKey.cs</LastGenOutput>
+    </None>
     <None Update="resources\World_Wide_Corp_lorem.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
 </Project>
