@@ -16,6 +16,8 @@ namespace AppEnvio
     {
         private const String DOC_2_DOCX = "World_Wide_Corp_Battle_Plan_Trafalgar.docx";
         private const String DOC_3_PDF = "World_Wide_Corp_lorem.pdf";
+        private const String DOC_4_PDF = "DemoDocuSign.pdf";
+        
 
         public static string ENVELOPE_1_DOCUMENT_1
         {
@@ -84,7 +86,7 @@ namespace AppEnvio
             //define um guid para identificador do documento
             var contratoid = Guid.NewGuid();
             Document doc3 = CreateDocumentFromTemplate("1", $"contrato_{contratoid}", "pdf",
-                DSHelper.ReadContent(DOC_3_PDF));
+                DSHelper.ReadContent(DOC_4_PDF));
 
             // The order in the docs array determines the order in the envelope
             envelopeDefinition.Documents = new List<Document>() { doc3 };
@@ -102,37 +104,15 @@ namespace AppEnvio
             }
             else
             {
-
                 // create a signer recipient to sign the document, identified by name and email
                 // We're setting the parameters via the object creation
-                Signer signer1 = CreateSigner(DSConfig.Signer1Email, DSConfig.Signer1Name, 1, 1);
-                Signer signer2 = CreateSigner(DSConfig.Signer2Email, DSConfig.Signer2Name, 2, 1);
-                //Signer signer3 = CreateSigner(DSConfig.Signer3Email, DSConfig.Signer3Name, 3, 2);
+                Signer signer1 = CreateSigner(DSConfig.Signer1Email, DSConfig.Signer1Name, DSConfig.Signer1FullName,  1, 1);
+                Signer signer2 = CreateSigner(DSConfig.Signer2Email, DSConfig.Signer2Name, DSConfig.Signer2FullName, 2, 2);
+                
+                CriaTabsAssinatura(signer1, @"\s1\", @"\d1\", @"\n1\");
+                CriaTabsAssinatura(signer2, @"\s2\", @"\d2\", @"\n2\");
 
-                // routingOrder (lower means earlier) determines the order of deliveries
-                // to the recipients. Parallel routing order is supported by using the
-                // same integer as the order for two or more recipients.
-
-                // create a cc recipient to receive a copy of the documents, identified by name and email
-                // We're setting the parameters via setters
-                //CarbonCopy cc1 = CreateCarbonCopy();
-                // Create signHere fields (also known as tabs) on the documents,
-                // We're using anchor (autoPlace) positioning
-                //
-                // The DocuSign platform seaches throughout your envelope's
-                // documents for matching anchor strings. So the
-                // sign_here_2 tab will be used in both document 2 and 3 since they
-                // use the same anchor string for their "signer 1" tabs.
-                SignHere signHere1 = CreateSignHere("**signature_1**", "pixels", "20", "10");
-                SignHere signHere2 = CreateSignHere("**signature_2**", "pixels", "60", "10");
-                //SignHere signHere3 = CreateSignHere("**signature_3**", "pixels", "100", "10");
-
-                // Tabs are set per recipient / signer
-                SetSignerTabs(signer1, signHere1);
-                SetSignerTabs(signer2, signHere2);
-                //SetSignerTabs(signer3, signHere3);
-                // Add the recipients to the envelope object
-                Recipients recipients = CreateRecipients(new List<Signer>() { signer1, signer2 });
+                Recipients recipients = CreateRecipients(new List<Signer>() {signer1, signer2 });
                 envelopeDefinition.Recipients = recipients;
                 // Request that the envelope be sent by setting |status| to "sent".
                 // To request that the envelope be created as a draft, set to "created"
@@ -169,6 +149,9 @@ namespace AppEnvio
                 SignHereTabs = new List<SignHere>(signers)
             };
         }
+
+      
+
         /// <summary>
         /// This method create SignHere anchor
         /// </summary>
@@ -187,6 +170,41 @@ namespace AppEnvio
                 AnchorYOffset = anchorYOffset
             };
         }
+
+        private SignHere CreateSignHere(String anchorPattern)
+        {
+            return new SignHere()
+            {
+                AnchorString = anchorPattern
+                
+            };
+        }
+
+
+        /// <summary>
+        /// Adicionar ancoras para assinatura, data de assinatura e nome completo
+        /// </summary>
+        /// <param name="signer"></param>
+        /// <param name="ancoraAssinatura"></param>
+        /// <param name="ancoraDataAssinatura"></param>
+        /// <param name="ancoraNomeCompleto"></param>
+        private void CriaTabsAssinatura(Signer signer, String ancoraAssinatura,  string ancoraDataAssinatura, string ancoraNomeCompleto)
+        {
+            signer.Tabs = new Tabs();            
+            signer.Tabs.SignHereTabs = new List<SignHere>();
+            signer.Tabs.SignHereTabs.Add(new SignHere() { AnchorString = ancoraAssinatura});
+            if (!string.IsNullOrEmpty(ancoraAssinatura))
+            {
+                signer.Tabs.DateSignedTabs = new List<DateSigned>();
+                signer.Tabs.DateSignedTabs.Add(new DateSigned() { AnchorString = ancoraDataAssinatura });
+            }
+            if (!string.IsNullOrEmpty(ancoraNomeCompleto))
+            {
+                signer.Tabs.FullNameTabs = new List<FullName>();
+                signer.Tabs.FullNameTabs.Add(new FullName() { AnchorString = ancoraNomeCompleto });
+            }
+        }
+
         /// <summary>
         /// This method creates CarbonCopy instance and populate its members
         /// </summary>
@@ -205,12 +223,13 @@ namespace AppEnvio
         /// This method creates Signer instance and populates its members
         /// </summary>
         /// <returns>Signer instance</returns>
-        private Signer CreateSigner(string email, string nome, int recipientId, int RoutingOrder)
+        private Signer CreateSigner(string email, string nome, string nomeCompleto, int recipientId, int RoutingOrder)
         {
             return new Signer
             {
                 Email = email,
                 Name = nome,
+                FullName = nomeCompleto,
                 RecipientId = $"{recipientId}",
                 RoutingOrder = $"{RoutingOrder}"
             };
@@ -230,8 +249,8 @@ namespace AppEnvio
             {
                 Email = email,
                 Name = nome,
-                RecipientId = $"{recipientId}",
-                RoutingOrder = $"{RoutingOrder}"
+                RecipientId = $"{recipientId}"
+                //RoutingOrder = $"{RoutingOrder}"
             };
         }
         /// <summary>

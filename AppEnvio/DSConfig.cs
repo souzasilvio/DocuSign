@@ -10,12 +10,15 @@ namespace AppEnvio
         private const string TARGET_ACCOUNT_ID = "DS_TARGET_ACCOUNT_ID";
         private const string SIGNER_1_EMAIL = "DS_SIGNER_1_EMAIL";
         private const string SIGNER_1_NAME = "DS_SIGNER_1_NAME";
+        private const string SIGNER_1_FULLNAME = "DS_SIGNER_1_FULLNAME";
 
         private const string SIGNER_2_EMAIL = "DS_SIGNER_2_EMAIL";
         private const string SIGNER_2_NAME = "DS_SIGNER_2_NAME";
+        private const string SIGNER_2_FULLNAME = "DS_SIGNER_2_FULLNAME";
 
         private const string SIGNER_3_EMAIL = "DS_SIGNER_3_EMAIL";
         private const string SIGNER_3_NAME = "DS_SIGNER_3_NAME";
+        private const string SIGNER_3_FULLNAME = "DS_SIGNER_3_FULLNAME";
 
         private const string CC_1_EMAIL = "DS_CC_1_EMAIL";
         private const string CC_1_NAME = "DS_CC_1_NAME";
@@ -30,12 +33,16 @@ namespace AppEnvio
             OAuthRedirectURI = "https://account-d.docusign.com/";
             Signer1Email = GetSetting(SIGNER_1_EMAIL);
             Signer1Name = GetSetting(SIGNER_1_NAME);
+            Signer1FullName = GetSetting(SIGNER_1_FULLNAME);
 
             Signer2Email = GetSetting(SIGNER_2_EMAIL);
             Signer2Name = GetSetting(SIGNER_2_NAME);
+            Signer2FullName = GetSetting(SIGNER_2_FULLNAME);
+
 
             Signer3Email = GetSetting(SIGNER_3_EMAIL);
             Signer3Name = GetSetting(SIGNER_3_NAME);
+            Signer3FullName = GetSetting(SIGNER_3_FULLNAME);
 
             Cc1Email = GetSetting(CC_1_EMAIL);
             Cc1Name = GetSetting(CC_1_NAME);
@@ -64,12 +71,15 @@ namespace AppEnvio
         public static string OAuthRedirectURI { get; private set; }
         public static string Signer1Email { get; private set; }
         public static string Signer1Name { get; private set; }
+        public static string Signer1FullName { get; private set; }
 
         public static string Signer3Email { get; private set; }
         public static string Signer3Name { get; private set; }
+        public static string Signer3FullName { get; private set; }
 
         public static string Signer2Email { get; private set; }
         public static string Signer2Name { get; private set; }
+        public static string Signer2FullName { get; private set; }
 
         public static string Cc1Email { get; private set; }
         public static string Cc1Name { get; private set; }
