@@ -4,6 +4,13 @@ using DocuSign.eSign.Client;
 using DocuSign.eSign.Model;
 using System.Text;
 using System.Collections.Generic;
+using Syncfusion.Pdf.Security;
+using System.IO;
+using Syncfusion.Pdf.Parsing;
+using Syncfusion.Pdf;
+using Syncfusion.Pdf.Interactive;
+using Syncfusion.Drawing;
+using Syncfusion.Pdf.Graphics;
 
 namespace AppEnvio
 {
@@ -349,6 +356,46 @@ namespace AppEnvio
             event_notification.RecipientEvents = recipient_events;
 
             envelope.EventNotification = event_notification;
+        }
+
+        public static void AssinarDocumento(byte[] pdf)
+        {
+            var x = 10;
+            var y = 600;
+            Stream pfxStream = File.OpenRead("powershellcert.pfx");
+            //Creates a certificate instance from PFX file with private key.
+            PdfCertificate pdfCert = new PdfCertificate(pfxStream, "mrv@123");
+
+            PdfLoadedDocument loadedDocument = new PdfLoadedDocument(pdf);
+            PdfLoadedPage page = loadedDocument.Pages[0] as PdfLoadedPage;
+
+            //Creates a signature field.
+            PdfSignatureField signatureField = new PdfSignatureField(page, "SignatureField");
+            signatureField.Bounds = new RectangleF(x, y, 100, 100);
+            signatureField.Signature = new PdfSignature(page, "MRV Engenharia");
+            //Adds certificate to the signature field.
+            signatureField.Signature.Certificate = pdfCert;
+            signatureField.Signature.Reason = "Assinado pela MRV Engenharia";          
+
+            if (page != null)
+            {
+                Stream seloStream = File.OpenRead("SeloMrv.jpg");
+                PdfBitmap signatureImage = new PdfBitmap(seloStream);
+
+                PdfGraphics gfx = page.Graphics;
+                gfx.DrawImage(signatureImage, x, y, 150, 134);
+            }
+           
+            //Adds the field.
+            loadedDocument.Form.Fields.Add(signatureField);
+
+            //Saves the certified PDF document.
+            using (FileStream fileOut = new  FileStream(@"d:\temp\Output.pdf", FileMode.Create))
+            {
+                loadedDocument.Save(fileOut);
+                loadedDocument.Close(true);
+            }
+
         }
     }
 }

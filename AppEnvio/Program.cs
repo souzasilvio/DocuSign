@@ -18,9 +18,17 @@ namespace AppEnvio
                 var apiClient = new ApiClient();
                 var urlwebhook = System.Configuration.ConfigurationManager.AppSettings["WebHookUrl"];
                 Console.WriteLine("\nSending an envelope with one document. This takes about 15 seconds...");
-                EnvelopeSummary result = new SendEnvelope(apiClient).Send(urlwebhook, opcao);
-                Console.WriteLine("\nDone. Envelope status: {0}. Envelope ID: {1}", result.Status, result.EnvelopeId);
+                if (opcao == "3")
+                {
+                    var pdf = DSHelper.ReadContent("DemoDocuSign.pdf");
+                    SendEnvelope.AssinarDocumento(pdf);                    
 
+                }
+                else
+                {
+                    EnvelopeSummary result = new SendEnvelope(apiClient).Send(urlwebhook, opcao);
+                    Console.WriteLine("\nDone. Envelope status: {0}. Envelope ID: {1}", result.Status, result.EnvelopeId);
+                }
                 //Console.WriteLine("\n\nList the envelopes in the account...");
                 //EnvelopesInformation envelopesList = new ListEnvelopes(apiClient).List();
                 //List<Envelope> envelopes = envelopesList.Envelopes;
