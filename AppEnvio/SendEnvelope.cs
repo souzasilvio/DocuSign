@@ -11,6 +11,7 @@ using Syncfusion.Pdf;
 using Syncfusion.Pdf.Interactive;
 using Syncfusion.Drawing;
 using Syncfusion.Pdf.Graphics;
+using System.Reflection;
 
 namespace AppEnvio
 {
@@ -66,11 +67,16 @@ namespace AppEnvio
         ///
         /// </summary>
         /// <returns></returns>
-        internal EnvelopeSummary Send(string webhookurl, string opcao)
+        internal EnvelopeSummary Send(string webhookurl, string opcao, string arquivo = null)
         {
             CheckToken();
-
-            EnvelopeDefinition envelope = this.CreateEvelope(opcao);
+            if (arquivo == null)
+            {
+              
+                var assembly = Assembly.GetExecutingAssembly();
+                arquivo = Path.Combine(Directory.GetCurrentDirectory(), "Resources", DOC_4_PDF);
+            }
+            EnvelopeDefinition envelope = this.CreateEvelope(opcao, arquivo);
             //Adiciona a configuração do webhook no envelope
             if(!string.IsNullOrEmpty(webhookurl))
             {
@@ -84,7 +90,7 @@ namespace AppEnvio
         /// This method creates the envelope request body 
         /// </summary>
         /// <returns></returns>
-        private EnvelopeDefinition CreateEvelope(string opcao)
+        private EnvelopeDefinition CreateEvelope(string opcao, string arquivo)
         {
             EnvelopeDefinition envelopeDefinition = new EnvelopeDefinition
             {
@@ -93,7 +99,7 @@ namespace AppEnvio
             //define um guid para identificador do documento
             var contratoid = Guid.NewGuid();
             Document doc3 = CreateDocumentFromTemplate("1", $"contrato_{contratoid}", "pdf",
-                DSHelper.ReadContent(DOC_4_PDF));
+                DSHelper.ReadContent(arquivo));
 
             // The order in the docs array determines the order in the envelope
             envelopeDefinition.Documents = new List<Document>() { doc3 };
@@ -358,20 +364,21 @@ namespace AppEnvio
             envelope.EventNotification = event_notification;
         }
 
-        public static void AssinarDocumento(byte[] pdf)
+        public static string AssinarDocumento(byte[] pdf)
         {
-            var x = 10;
-            var y = 600;
-            Stream pfxStream = File.OpenRead("powershellcert.pfx");
+            var arquivo = $"d:\\temp\\contrato_assinado_{new Random().Next(1, int.MaxValue)}.pdf";
+            var x = 100;
+            var y = 700;
+            Stream pfxStream = File.OpenRead("MRV ENGENHARIA E PARTICIPAÇÕES S.A..pfx");
             //Creates a certificate instance from PFX file with private key.
-            PdfCertificate pdfCert = new PdfCertificate(pfxStream, "mrv@123");
+            PdfCertificate pdfCert = new PdfCertificate(pfxStream, "xxxxx");
 
-            PdfLoadedDocument loadedDocument = new PdfLoadedDocument(pdf);
+            PdfLoadedDocument loadedDocument = new PdfLoadedDocument(pdf);           
             PdfLoadedPage page = loadedDocument.Pages[0] as PdfLoadedPage;
 
             //Creates a signature field.
-            PdfSignatureField signatureField = new PdfSignatureField(page, "SignatureField");
-            signatureField.Bounds = new RectangleF(x, y, 100, 100);
+            PdfSignatureField signatureField = new PdfSignatureField(page, "AssinaturaMRV");
+            signatureField.Bounds = new RectangleF(x, y, 50, 50);
             signatureField.Signature = new PdfSignature(page, "MRV Engenharia");
             //Adds certificate to the signature field.
             signatureField.Signature.Certificate = pdfCert;
@@ -383,18 +390,19 @@ namespace AppEnvio
                 PdfBitmap signatureImage = new PdfBitmap(seloStream);
 
                 PdfGraphics gfx = page.Graphics;
-                gfx.DrawImage(signatureImage, x, y, 150, 134);
+                gfx.DrawImage(signatureImage, x, y, 90, 80);
             }
            
             //Adds the field.
             loadedDocument.Form.Fields.Add(signatureField);
 
             //Saves the certified PDF document.
-            using (FileStream fileOut = new  FileStream(@"d:\temp\Output.pdf", FileMode.Create))
+            using (FileStream fileOut = new  FileStream(arquivo, FileMode.Create))
             {
                 loadedDocument.Save(fileOut);
                 loadedDocument.Close(true);
             }
+            return arquivo;
 
         }
     }

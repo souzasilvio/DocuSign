@@ -19,13 +19,13 @@ namespace AppEnvio
         internal static byte[] ReadContent(string fileName)
         {
             byte[] buff = null;
-            var assembly = Assembly.GetExecutingAssembly();
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", fileName);
-            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read))
+            //var assembly = Assembly.GetExecutingAssembly();
+            //var path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", fileName);
+            using (FileStream stream = new FileStream(fileName, FileMode.Open, FileAccess.Read))
             {
                 using (BinaryReader br = new BinaryReader(stream))
                 {
-                    long numBytes = new FileInfo(path).Length;
+                    long numBytes = new FileInfo(fileName).Length;
                     buff = br.ReadBytes((int)numBytes);
                 }
             }

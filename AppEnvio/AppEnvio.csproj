@@ -23,7 +23,13 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ContratoDigitalPubKey.cs</LastGenOutput>
     </None>
+    <None Update="MRV ENGENHARIA E PARTICIPAÇÕES S.A..pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="powershellcert.pfx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="resources\contrato_5213fe7d-3c6c-4624-9d5f-e34dc2738e4f.pdf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="resources\DemoDocuSign.pdf">

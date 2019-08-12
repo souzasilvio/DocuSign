@@ -1,7 +1,15 @@
 ﻿using DocuSign.eSign.Client;
 using DocuSign.eSign.Model;
+using Syncfusion.Pdf;
+using Syncfusion.Pdf.Graphics;
+using Syncfusion.Pdf.Interactive;
+using Syncfusion.Pdf.Parsing;
+using Syncfusion.Pdf.Security;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Reflection;
 
 namespace AppEnvio
 {
@@ -18,13 +26,22 @@ namespace AppEnvio
                 var apiClient = new ApiClient();
                 var urlwebhook = System.Configuration.ConfigurationManager.AppSettings["WebHookUrl"];
                 Console.WriteLine("\nSending an envelope with one document. This takes about 15 seconds...");
+
+                if (opcao == "4")
+                {
+                    AssinarDocumento();
+                }
+
                 if (opcao == "3")
                 {
-                    var pdf = DSHelper.ReadContent("DemoDocuSign.pdf");
-                    SendEnvelope.AssinarDocumento(pdf);                    
+                    var assembly = Assembly.GetExecutingAssembly();
+                    var path = Path.Combine(Directory.GetCurrentDirectory(), "Resources", "DemoDocuSign.pdf");
+                    var pdf = DSHelper.ReadContent(path);
+                    var arquivo = SendEnvelope.AssinarDocumento(pdf);
+                    EnvelopeSummary result = new SendEnvelope(apiClient).Send(urlwebhook, "1", arquivo);
 
                 }
-                else
+                if (opcao == "1" || opcao == "2")
                 {
                     EnvelopeSummary result = new SendEnvelope(apiClient).Send(urlwebhook, opcao);
                     Console.WriteLine("\nDone. Envelope status: {0}. Envelope ID: {1}", result.Status, result.EnvelopeId);
@@ -75,6 +92,63 @@ namespace AppEnvio
 
             Console.WriteLine("Done. Hit enter to exit...");
             Console.ReadKey();
+        }
+
+
+        public static void AssinarDocumento()
+        {
+            var arquivoEnt = $"d:\\temp\\modelo.pdf";
+            var pdf = DSHelper.ReadContent(arquivoEnt);
+            var arquivo = $"d:\\temp\\modeloOut.pdf";
+            float x;
+            float y;
+            Stream pfxStream = File.OpenRead("MRV ENGENHARIA E PARTICIPAÇÕES S.A..pfx");
+            //Creates a certificate instance from PFX file with private key.
+            PdfCertificate pdfCert = new PdfCertificate(pfxStream, "zzzzz");
+
+            PdfLoadedDocument loadedDocument = new PdfLoadedDocument(pdf);
+          
+            var lista = new Dictionary<int, List<Syncfusion.Drawing.RectangleF>>();
+            loadedDocument.FindText("Assinado:", out lista);
+        
+            foreach (var item in lista)
+            {
+                x = item.Value[0].X + 100;
+                y = item.Value[0].Y;
+                var page = loadedDocument.Pages[item.Key] as PdfLoadedPage;             
+
+                //aplica logo da assinatura em todas as paginas
+                if (page != null)
+                {
+                    Stream seloStream = File.OpenRead("SeloMrv.jpg");
+                    PdfBitmap signatureImage = new PdfBitmap(seloStream);
+                    PdfGraphics gfx = page.Graphics;
+                    gfx.DrawImage(signatureImage, x, y, 90, 80);
+                }
+
+                //Applica o certificado somente na ultima pagina
+                if (item.Value == lista[lista.Keys.Count - 1])
+                {
+                    //Creates a signature field.
+                    PdfSignatureField signatureField = new PdfSignatureField(page, "AssinaturaMRV");
+                    signatureField.Bounds = new Syncfusion.Drawing.RectangleF(x, item.Value[0].Y, 50, 50);
+                    signatureField.Signature = new PdfSignature(page, "MRV Engenharia");
+                    //Adds certificate to the signature field.
+                    signatureField.Signature.Certificate = pdfCert;
+                    signatureField.Signature.Reason = "Assinado pela MRV Engenharia";
+
+                    //Adds the field.
+                    loadedDocument.Form.Fields.Add(signatureField);
+                }
+            }
+            //Saves the certified PDF document.
+            using (FileStream fileOut = new FileStream(arquivo, FileMode.Create))
+            {
+                loadedDocument.Save(fileOut);
+                loadedDocument.Close(true);
+            }
+            //return arquivo;
+
         }
     }
 }
